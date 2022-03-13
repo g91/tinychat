@@ -1,0 +1,579 @@
+wss://wss1504.tinychat.com:6579
+tinychat-webrtc-app.html-74.js:1 {sdp: 'v=0\r\no=- 2078484 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na…1 udp 2113929727 167.114.164.158 37239 typ host\r\n'}
+tinychat-webrtc-app.html-74.js:1 {sdp: 'v=0\r\no=- 2078463 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na…1 udp 2113929727 167.114.164.158 49475 typ host\r\n'}
+tinychat-webrtc-app.html-74.js:1 {sdp: 'v=0\r\no=- 2078424 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na…1 udp 2113929727 167.114.164.158 11825 typ host\r\n'}
+
+
+return a.browser = "Not a browser.", a;
+if (t.mozGetUserMedia) a.browser = "firefox", a.version = r(t.userAgent, /Firefox\/(\d+)\./, 1);
+else if (t.webkitGetUserMedia) a.browser = "chrome", a.version = r(t.userAgent, /Chrom(e|ium)\/(\d+)\./, 2);
+else if (t.mediaDevices && t.userAgent.match(/Edge\/(\d+).(\d+)$/)) a.browser = "edge", a.version = r(t.userAgent, /Edge\/(\d+).(\d+)$/, 2);
+else if (e.RTCPeerConnection && t.userAgent.match(/AppleWebKit\/(\d+)\./)) a.browser = "safari", a.version = r(t.userAgent, /AppleWebKit\/(\d+)\./, 1);
+else return a.browser = "Not a supported browser.", a;
+return a
+}
+}
+}, {}]
+}, {}, [3])(3)
+}); < /script><script>(function(){"use strict";class a{constructor(a,b,c,d,e){this.videolist=a,this.chatroom=a.chatroom,this.app=a.chatroom.app,this.EventBus=a.chatroom.app.EventBus,this.handle=b,this.outgoing=c,this.sdp=e,this.mediaStream=null,this.iceStateLast="",this.iceConnectedCount=0;let f=this;this.rtc=new RTCPeerConnection({rtcpMuxPolicy:"require",bundlePolicy:"max-bundle",iceServers:[{urls:d}]},{}),this.rtc.onicecandidate=function(a){f.onICE_Candidate(a)},this.rtc.oniceconnectionstatechange=function(a){f.onICE_ConnectionStateChange(a)},this.rtc.onaddstream=function(a){f.onAddStream(a)},this.rtc.onremovestream=a=>{f.onRemoveStream(a)}}get ingoing(){return!this.outgoing}Connect(){this.outgoing?this._sendOfferPublisher():this._sendOfferRemote()}Close(){if(null!=this.rtc){let a=this.rtc;this.rtc=null,null!=this.mediaStream&&(this.mediaStream.active&&"closed"!==a.signalingState&&"function"===typeof a.removeStream&&a.removeStream(this.mediaStream),this.mediaStream.stop(),this.mediaStream=null),"closed"!==a.signalingState&&a.close(),console.log("MediaConnection.SignalingState: "+a.signalingState+" ->>> Close")}}AddStream(a){this.rtc.addStream(a),this.mediaStream=a}onICE_Candidate(a){if(console.log(a.candidate),null!=a.candidate&&"object"===typeof a.candidate&&"string"===typeof a.candidate.candidate){var b=this.chatroom.tcPkt_Trickle(this.handle,a.candidate.candidate);this.chatroom.packetWorker.send(b)}}
+
+
+
+
+onICE_ConnectionStateChange(a){console.log(a);let b=TinychatApp.BLL.BroadcastProgressEvent,c=a.target;if(null!=c){switch(c.iceConnectionState){case"starting":break;case"checking":break;case"completed":break;case"connected":if(this.outgoing&&0===this.iceConnectedCount){console.log("Broadcast: Started Successfully"),this.videolist.AddVideoSelf(this.handle,this.mediaStream);let a=new b(b.MEDIA_STARTED_SUCCESS);this.EventBus.broadcast(b.ID,a)}this.iceConnectedCount+=1;break;case"disconnected":break;case"failed":console.error(a);case"closed":if(this.outgoing){this.videolist.RemoveVideoSelf(this.handle);let a=new b(b.MEDIA_STOPED);this.EventBus.broadcast(b.ID,a)}else this.videolist.RemoveVideoRemote(this.handle);}this.iceStateLast=c.iceConnectionState}}onAddStream(a){return this.outgoing?void console.log("Broadcast: LocalMedia.Added ("+this.handle+")!!!"):void(console.log("Broadcast: RemoteMedia.Added ("+this.handle+")!!!"),this.videolist.AddVideoRemote(this.handle,a.stream))}onRemoveStream(){return this.outgoing?void console.log("Broadcast: LocalMedia.Removed ("+this.handle+")!!!"):void(console.log("Broadcast: RemoteMedia.Removed ("+this.handle+")!!!"),this.videolist.RemoveVideoRemote(this.handle,event.stream))}_sendOfferPublisher(){let a=this,b=new Map;b.set("offerToReceiveAudio",!1),b.set("offerToReceiveVideo",!1),this.rtc.createOffer(b).then(function(b){a.rtc.setLocalDescription(b),console.log({sdp:b.sdp});let c=a.chatroom.tcPkt_SDP(b.type,b.sdp,0,function(b){a._onOfferPublisher(b)});a.chatroom.packetWorker.send(c)},function(a){console.error(a);let b=TinychatApp.BLL.BroadcastProgressEvent,c=new b(b.MEDIA_RTC_FAILED);c.error=a,this.EventBus.broadcast(b.ID,c)})}_onOfferPublisher(a){if(this.chatroom.tcPkt_TcCallbackCheck(a,"sdp"))if(!0===a.success)console.log({sdp:a.sdp}),this.rtc.setRemoteDescription(new RTCSessionDescription({type:a.type,sdp:a.sdp}));else{if(void 0!==a.reason&&null!==a.reason)if(16===a.reason.code){let b=a.timeout.timeToReadable();60<a.timeout?this.app.showToastWarn(`${a.reason.text}, you can try to broadcast again in ${b}`,4e3):this.app.showToast(`${a.reason.text}, you can try to broadcast again in ${b}`,4e3)}else 18===a.reason.code&&this.app.showToast(a.reason.text,3e3);this.rtc.close()}}_sendOfferRemote(){let a=this;this.rtc.setRemoteDescription(new RTCSessionDescription({type:"offer",sdp:this.sdp})).then(function(){return a.rtc.remoteDescription}).then(function(){a.rtc.createAnswer().then(function(b){return a.rtc.setLocalDescription(b)}).then(function(){let b=a.rtc.localDescription.type,c=a.rtc.localDescription.sdp,d=a.handle;var e=a.chatroom.tcPkt_SDP(b,c,d,function(){});a.chatroom.packetWorker.send(e)}).catch(function(a){console.error(a)})}).catch(function(a){console.error(a)})}_onOfferRemote(a){this.chatroom.tcPkt_TcCallbackCheck(a,"sdp")&&(!0!==a.success&&this.Close(),console.log("Broadcast: RemoteMedia.SDP ..."))}}window.TinychatApp.BLL.MediaConnection=a})();</script > < script > (function () {
+	"use strict";
+	var a = Math.Guid;
+	let b = null;
+	class c {
+		constructor(a, b, c) {
+			this.debug = c, c && (window.DEBUG = c), this.EventBus = new EventBus, this._version = new i(2, 0, 20, 420, c), window.rootDir = this._version.rootDir(), this.defaultChatroom = null, console.log("App.useragent - " + this.useragent), this.tc_token = a, this.loginState = null, this.LoginInfo(b), this.showShareHandler = null, this.showMediaFiltersHandler = null, this.showMediaSettingsHandler = null, this.showSettingsHandler = null, this.showUpgradeHandler = null, this.showNotificationHandler = null, this.showUserProfile = null, this.showBanlistHandler = null, this.showYoutubeHandler = null
+		}
+		static getInstance(a, d, e) {
+			return null == b && (b = new c(a, d, e)), b
+		}
+		static get RegExp_Nickname() {
+			return /\w+/ig
+		}
+		static get url() {
+			return "https://tinychat.com"
+		}
+		static url_avatar(a) {
+			var a = a == void 0 ? "guest" : a;
+			return "https://upload.tinychat.com/pic/" + encodeURI(a)
+		}
+		static url_api_v1_0() {
+			return c.url + "/api/v1.0"
+		}
+		static url_api_login_info() {
+			return this.url_api_v1_0() + "/user/info"
+		}
+		static url_api_room_token(a) {
+			return this.url_api_v1_0() + "/room/token/" + encodeURI(a)
+		}
+		static url_api_settings_switchclient(a) {
+			return "/settings/version/" + encodeURI(a)
+		}
+		static url_api_userprofile(a) {
+			var a = a == void 0 ? "guest" : a;
+			return this.url_api_v1_0() + "/user/profile?username=" + encodeURI(a)
+		}
+		static url_api_follow() {
+			return this.url + "/user/follow"
+		}
+		get version() {
+			return this._version
+		}
+		get useragent() {
+			return this._version.userAgent()
+		}
+		get settings() {
+			return TinychatApp.BLL.SettingsFeature.getInstance(this.EventBus)
+		}
+		get _tracker() {
+			return TinychatApp.BLL.Tracker.getInstance()
+		}
+		get _router() {
+			return TinychatApp.BLL.Router.getInstance()
+		}
+		get _api() {
+			return WebAPI.getInstance()
+		}
+		get _cookie() {
+			return CookieUtils
+		}
+		isDebug() {
+			return this.debug
+		}
+		setDarkModeCSSclass(a) {
+			return a ? "dark" : ""
+		}
+		GetChatroom(a) {
+			if (this.isDebug() && console.warn("App.isDebug"), void 0 == a) throw new Exception("Roomname is empty");
+			let b = this.settings.getSettings();
+			return this.defaultChatroom = new TinychatApp.BLL.ChatRoom(this, this.tc_token, a, b.nickname), this.defaultChatroom
+		}
+		GiveAGift(a) {
+			"string" == typeof a && 0 < a.length ? this._router.GiveAGift(a) : this._router.GiveAGift()
+		}
+		LiveDirectory() {
+			this._router.LiveDirectory()
+		}
+		EarnCoins() {
+			this._router.EarnCoins()
+		}
+		UpgradeSub() {
+			this._router.UpgradeSub()
+		}
+		SwitchClientVersion() {
+			let a = this;
+			this._api.wsj({
+				src: a.url_api_settings_switchclient("old")
+			}).then(a => {
+				console.log(a), window.location.reload()
+			}).catch(b => {
+				console.error(b), a.showToastWarn("Some unknown server error occurred")
+			})
+		}
+		PromoteRoom() {
+			this._router.PromoteRoom()
+		}
+		Login(a) {
+			this._router.Login(a)
+		}
+		Register() {
+			this._router.Register()
+		}
+		Logout() {
+			this._router.Logout()
+		}
+		Share() {
+			Object.isFunc(this.showShareHandler) && this.showShareHandler()
+		}
+		Banlist() {
+			Object.isFunc(this.showBanlistHandler) && this.showBanlistHandler()
+		}
+		Youtube() {
+			Object.isFunc(this.showYoutubeHandler) && this.showYoutubeHandler()
+		}
+		MediaFilters() {
+			Object.isFunc(this.showMediaFiltersHandler) && this.showMediaFiltersHandler()
+		}
+		MediaSettings(a) {
+			Object.isFunc(this.showMediaSettingsHandler) && this.showMediaSettingsHandler(a)
+		}
+		Settings() {
+			Object.isFunc(this.showSettingsHandler) && this.showSettingsHandler()
+		}
+		Upgrade(a) {
+			Object.isFunc(this.showUpgradeHandler) && this.showUpgradeHandler(a)
+		}
+		Notify(a, b) {
+			Object.isFunc(this.showNotificationHandler) && this.showNotificationHandler(a, b)
+		}
+		DevNews() {
+			this._router.DevNews()
+		}
+		WebSettings() {
+			this._router.WebSettings()
+		}
+		UserProfile(a) {
+			Object.isFunc(this.showUserProfile) && this.showUserProfile(a)
+		}
+		LoginInfo(a) {
+			var b = this;
+			if ("object" === typeof a) {
+				let b = a,
+					c = new TinychatApp.DAL.LoginUserInfoEntity,
+					d = new TinychatApp.DAL.LoginResultEntity;
+				return d.loggedIn = b.loggedIn, d.loginName = b.username, d.userInfo = c, void this.OnLoginInfo(d)
+			}
+			this._api.wsj({
+				src: c.url_api_login_info()
+			}).then(function (a) {
+				let c = new TinychatApp.DAL.LoginResultEntity;
+				if (c.errorcode = a.result, c.errormsg = a.message, "success" == a.result) {
+					var d = new TinychatApp.DAL.LoginUserInfoEntity;
+					c.usersuggestion = a.username, c.userInfo = d, b.OnLoginInfo(c)
+				}
+				let f = b._parseLoginCookies();
+				c.loggedIn = null != f, c.loginName = null == f ? "" : f.login_name;
+				let g = b.loginState,
+					h = new e(g, c);
+				b.EventBus.broadcast(e.ID, h)
+			}).catch(function (a) {
+				console.error(a)
+			})
+		}
+		OnLoginInfo(a) {
+			this.loginState = a == void 0 ? null : a
+		}
+		LoginState() {
+			return this.loginState
+		}
+		IsLoggedIn() {
+			return null != this.loginState && this.loginState.loggedIn
+		}
+		LoginName() {
+			return null == this.loginState ? null : this.loginState.loginName
+		}
+		IsFree() {
+			return !(null != this.loginState) || null == this.loginState.userInfo || 0 === this.loginState.userInfo.stype
+		}
+		GetAvatarUrl(a) {
+			return c.url_avatar(a)
+		}
+		Follow(a, b, d) {
+			return this._api.wsj({
+				src: c.url_api_follow(),
+				params: {
+					event: 1,
+					favourite: a
+				}
+			}, !0).then(function (a) {
+				Object.isFunc(b) && b(a)
+			}).catch(function (a) {
+				console.error(a), Object.isFunc(d) && d(a)
+			})
+		}
+		GetProfile(a, b, d) {
+			return this._api.wsj({
+				src: c.url_api_userprofile(a)
+			}).then(function (a) {
+				if ("success" != a.result) return !1;
+				let c = new TinychatApp.DAL.UserProfileEntity;
+				c.username = a.username, c.biography = a.biography, c.gender = a.gender, c.age = a.age, c.location = a.location, c.role = a.role, c.stype = a.stype, c.avatarUrl = a.avatarUrl, c.achieveUrl = a.achieveUrl, c.percentToNextAchieve = a.percentToNextAchieve, c.giftpoints = a.giftpoints;
+				let d = a.virtualgifts,
+					e = [];
+				Array.isArray(d) && Object.keys(d).forEach(a => {
+					let b = new TinychatApp.DAL.GiftEntity,
+						c = d[a];
+					b.giftUrl = c.imageSource, b.giftName = c.name, e.push(b)
+				}), c.gifts = e, Object.isFunc(b) && b(c)
+			}).catch(function (a) {
+				console.error(a), Object.isFunc(d) && d(a)
+			})
+		}
+		IsValidNickname(a) {
+			if ("string" != typeof a) return !1;
+			if (1 > a.length) return !1;
+			var b = c.RegExp_Nickname.exec(a);
+			return null != b && b.input.length == b[0].length
+		}
+		IsValidRoomname(a) {
+			return this.IsValidNickname(a)
+		}
+		ReconnectDefaultChatroom() {
+			this.defaultChatroom ? this.defaultChatroom.Reconnect() : window.location.reload()
+		}
+		showToastLurker() {
+			let a = this,
+				b = Toast.TYPE.WARN,
+				c = new g(b, "You're in view-only mode. Reconnect and solve captcha...", 4e3, () => {
+					a.ReconnectDefaultChatroom()
+				}, "Solve Captcha");
+			this.EventBus.broadcast(g.ID, c)
+		}
+		showToastWarn(a, b = 2e3) {
+			let c = Toast.TYPE.WARN,
+				d = new g(c, a, b, null);
+			this.EventBus.broadcast(g.ID, d)
+		}
+		showToast(a, b = 2e3) {
+			let c = new g("", a, b, null);
+			this.EventBus.broadcast(g.ID, c)
+		}
+		showToastTimeoutToLogin(a = 60) {
+			let b = Toast.TYPE.TIMEOUT_TO_LOGIN,
+				c = new g(b, "", a, null);
+			this.EventBus.broadcast(g.ID, c)
+		}
+		_readLoginState() {
+			let a = this._parseLoginCookies(),
+				b = new TinychatApp.DAL.LoginResultEntity;
+			return b.loggedIn = null != a, b.loginName = null == a ? "" : a.login_name, b
+		}
+		_parseLoginCookies() {
+			try {
+				let a = this._cookie.getCookie("pass"),
+					b = this._cookie.getCookie("user"),
+					c = this._cookie.getCookie("hash"),
+					d = new h;
+				if (d.login_hash = c, d.login_passhash = a, d.login_name = b, void 0 != d.login_hash && "string" === typeof d.login_hash && void 0 != d.login_passhash && "string" === typeof d.login_passhash && void 0 != d.login_name && "string" === typeof d.login_name) return d
+			} catch (a) {}
+			return null
+		}
+		isSafari() {
+			let a = new UAParser;
+			return -1 !== a.getBrowser().name.indexOf("Safari")
+		}
+	}
+	const d = "LoginStateChangedEvent_" + a.newGuid();
+	class e {
+		static get ID() {
+			return d
+		}
+		constructor(a, b) {
+			return this.beforeState = a, this.loginState = b, this
+		}
+	}
+	const f = "ToastEvent_" + a.newGuid();
+	class g {
+		static get ID() {
+			return f
+		}
+		constructor(a, b, c, d, e) {
+			return this.type = a, this.text = b, this.wait = c, this.ok_handler = d, this.ok_text = e, this
+		}
+	}
+	class h {
+		constructor() {
+			this.login_hash = "", this.login_passhash = "", this.login_name = ""
+		}
+	}
+	class i {
+		constructor(a, b, c, d, e) {
+			this.app_name = "Tinychat", this.major = a, this.minor = b, this.patch = c, this.build = d, this.debug = e != void 0 && e
+		}
+		toString() {
+			return this.shortTitle()
+		}
+		userAgent() {
+			return this.format("{0}-client-webrtc-{3}-{1}-{2}").toLowerCase()
+		}
+		shortTitle() {
+			return this.format("v{1} ({2})")
+		}
+		title() {
+			return this.format("{0} for WebRTC v{1} ({2})")
+		}
+		rootDir() {
+			return this.format("/webrtc/{1}-{2}")
+		}
+		format(a) {
+			a = a == void 0 ? "{0} for WebRTC v{1} ({2}-{3})" : a;
+			let b = this.major + "." + this.minor + "." + this.patch + (this.debug ? "~d" : ""),
+				c = this.getBrowser() + "_" + navigator.platform,
+				d = this.build;
+			return a.format(this.app_name, b, d, c)
+		}
+		getBrowser() {
+			try {
+				var a, b = a.width
+			} catch (a) {
+				var c = a.toString();
+				return -1 === c.search("not an object") ? -1 === c.search("Cannot read") ? -1 === c.search("e is undefined") ? -1 === c.search("Unable to get property 'width' of undefined or null reference") ? -1 === c.search("cannot convert e into object") ? void 0 : "opera" : document.documentMode || !window.StyleMedia ? "IE" : "edge" : "firefox" : "chrome" : "safari"
+			}
+		}
+	}
+	c.BLL = window.TinychatApp.BLL, c.DAL = window.TinychatApp.DAL, c.BLL.LoginStateChangedEvent = e, c.BLL.ToastEvent = g, window.TinychatApp = c
+})(); < /script><script>(function(){"use strict";var a=window.TinychatApp||{};a.UI={},window.TinychatApp=a})();</script > < script > (function () {
+	"use strict";
+	var a = Math.Guid;
+	const b = "UISideMenuToggle_" + a.newGuid();
+	class c {
+		static get ID() {
+			return b
+		}
+		constructor() {
+			return this
+		}
+	}
+	const d = "UIChatlogWiderToggle_" + a.newGuid();
+	class e {
+		static get ID() {
+			return d
+		}
+		constructor() {
+			return this
+		}
+	}
+	window.TinychatApp.UI.UISideMenuToggle = c, window.TinychatApp.UI.UIChatlogWiderToggle = e
+})(); < /script>
+
+
+
+
+this.BroadcastStart(e.video.deviceId.exact)
+})
+}
+else b.onMediaFailedCallback(new Error("Use https:// protocol for safe open media devices."))
+}).catch(a => {
+	console.log(a)
+})
+}
+}
+BroadcastStop() {
+	console.log("Broadcast: Media ... stop");
+	let a = new y(y.MEDIA_STOPING);
+	this.EventBus.broadcast(y.ID, a);
+	let b = this.tcPkt_StreamClose(this.self_handle, this.onStreamClosed);
+	this.packetWorker.send(b)
+}
+Youtube(a) {
+	let b = this.tcPkt_Youtube(a.cmd, a);
+	this.packetWorker.send(b)
+}
+YoutubePlaylistLoad(a) {
+	let b = this,
+		c = this.tcPkt_YoutubePlaylist(c => {
+			b.onYoutubePlaylist(c), a && a()
+		});
+	this.packetWorker.send(c)
+}
+YoutubePlaylistMode(a, b, c) {
+	let d = this.tcPkt_YoutubePlaylistMode(a, b, a => {
+		!0 === a.success && c && c()
+	});
+	this.packetWorker.send(d)
+}
+YoutubePlaylistAdd(a, b) {
+	let c = this.tcPkt_YoutubePlaylistAdd(a, a => {
+		!0 === a.success && b && b()
+	});
+	this.packetWorker.send(c)
+}
+YoutubePlaylistRemove(a, b) {
+	let c = this.tcPkt_YoutubePlaylistRemove(a, a => {
+		!0 === a.success && b && b()
+	});
+	this.packetWorker.send(c)
+}
+YoutubePlaylistClear(a) {
+	let b = this.tcPkt_YoutubePlaylistClear(b => {
+		!0 === b.success && a && a()
+	});
+	this.packetWorker.send(b)
+}
+SendMessagePublic(a) {
+	this.packetWorker.send(this.tcPkt_Msg(a, this.onSendMessagePublicCallback))
+}
+SendMessagePrivate(a, b, c) {
+	this.packetWorker.send(this.tcPkt_Msg_Private(a, c.handle, this.onSendMessagePrivateCallback))
+}
+Kick(a) {
+	this.packetWorker.send(this.tcPkt_Kick(a.handle))
+}
+Abuse(a) {
+	this.app.showToast("[" + a.nickname + "] was reported"), this.packetWorker.send(this.tcPkt_Abuse(a.handle))
+}
+Ban(a) {
+	this.app.showToast("[" + a.nickname + "] has been banned"), this.packetWorker.send(this.tcPkt_Ban(a.handle, this.onBanCallback))
+}
+Unban(a) {
+	this.packetWorker.send(this.tcPkt_Unban(a.id, this.onUnbanCallback))
+}
+Banlist(a) {
+	let b = this;
+	this.packetWorker.send(this.tcPkt_Banlist(c => {
+		b.onBanlistCallback(c), a(Array.isArray(b.banlist) ? b.banlist : [])
+	}))
+}
+VideoForceClose(a) {
+	this.packetWorker.send(this.tcPkt_VideoForceClose(a.handle, this.onVideoForceCloseCallback))
+}
+VideoAllow(a) {
+	this.packetWorker.send(this.tcPkt_VideoAllow(a.handle))
+}
+switchFullscreen(a) {
+	return this.fullscreen = void 0 == a ? !this.fullscreen : a, this.fullscreen
+}
+takeSnapshot() {
+	return !0
+}
+tcPkt_Connect(a) {
+	let b = this.packetWorker.wsCreatePacket("join", a);
+	return b.useragent = this.app.useragent, b.token = this.tc_token, b.room = this.roomname, b.nick = this.nickname, b
+}
+tcPkt_Pong() {
+	let a = this.packetWorker.wsCreatePacket("pong");
+	return a
+}
+tcPkt_GetICE(a) {
+	let b = this.packetWorker.wsCreatePacket("getice", a);
+	return b
+}
+tcPkt_Trickle(a, b) {
+	let c = this.packetWorker.wsCreatePacket("trickle");
+	return c.handle = a, c.candidate = b, c
+}
+tcPkt_SDP(a, b, c, d) {
+	let e = this.packetWorker.wsCreatePacket("sdp", d);
+	return e.type = a, e.sdp = b, e.handle = c, e
+}
+tcPkt_Subscribe(a, b) {
+	let c = this.packetWorker.wsCreatePacket("subscribe", b);
+	return c.handle = a, c
+}
+tcPkt_Msg(a, b) {
+	let c = this.packetWorker.wsCreatePacket("msg", b);
+	return c.text = this.tcPktPrepareText(a), c
+}
+tcPkt_Msg_Private(a, b, c) {
+	let d = this.packetWorker.wsCreatePacket("pvtmsg", c);
+	return d.text = this.tcPktPrepareText(a), d.handle = b, d
+}
+tcPkt_Kick(a, b) {
+	let c = this.packetWorker.wsCreatePacket("kick", b);
+	return c.handle = a, c
+}
+tcPkt_Ban(a, b) {
+	let c = this.packetWorker.wsCreatePacket("ban", b);
+	return c.handle = a, c
+}
+tcPkt_Unban(a, b) {
+	let c = this.packetWorker.wsCreatePacket("unban", b);
+	return c.id = a, c
+}
+tcPkt_Banlist(a) {
+	let b = this.packetWorker.wsCreatePacket("banlist", a);
+	return b
+}
+tcPkt_VideoForceClose(a, b) {
+	let c = this.packetWorker.wsCreatePacket("stream_moder_close", b);
+	return c.handle = a, c
+}
+tcPkt_VideoAllow(a) {
+	let b = this.packetWorker.wsCreatePacket("stream_moder_allow");
+	return b.handle = a, b
+}
+
+
+function () {
+	"use strict";
+	const a = window.TinychatApp.BLL.TCSocket;
+	class b {
+		constructor(b) {
+			this.chatRoom = b, this.app = b.app, this.EventBus = b.EventBus, this.reqid = 0, this.queue = {}, this.tcSocket = new a(this.chatRoom, this)
+		}
+		get userlist() {
+			return this.chatRoom.userlist
+		}
+		get videolist() {
+			return this.chatRoom.videolist
+		}
+		get chatlog() {
+			return this.chatRoom.chatlog
+		}
+		reset() {
+			this.tcSocket.reset(), this.reqid = 0, this.queue = {}
+		}
+		send(a) {
+			return this.tcSocket.send(a)
+		}
+		connect(a) {
+			this.tcSocket.connect(a)
+		}
+		onMessage(a) {
+			let b = JSON.parse(a.data),
+				c = b.req;
+			if (c !== void 0) {
+				let a = this.queue[c];
+				if (void 0 !== a) return Object.isObj(a) && Object.isFunc(a.func) ? a.func.call(this.chatRoom, b, a.params) : Object.isFunc(a) && a.call(this.chatRoom, b), void delete this.queue[c]
+			}
+			let d = b.tc;
+			"string" === typeof d ? "ping" === d ? this.chatRoom.onPing(b) : "userlist" === d ? this.chatRoom.onRoomUserlist(b) : "join" === d ? this.chatRoom.onRoomUserJoin(b) : "room_settings" === d ? this.chatRoom.onRoomSettings(b) : "quit" === d ? this.chatRoom.onRoomUserQuit(b) : "publish" === d ? this.chatRoom.onRoomPublish(b) : "unpublish" === d ? this.chatRoom.onRoomUnPublish(b) : "stream_connected" === d ? this.chatRoom.onStreamConnected(b) : "pending_moderation" === d ? this.chatRoom.onPendingModeration(b) : "waiting_slot" === d ? this.chatRoom.onWaitingSlot(b) : "stream_closed" === d ? this.chatRoom.onStreamClosed(b) : "stream_moder_allow" === d ? this.chatRoom.onStreamModerAllow(b) : "msg" === d ? this.chatRoom.onSendMessagePublicCallback(b) : "nick" === d ? this.chatRoom.onNicknameChanged(b) : "pvtmsg" === d ? this.chatRoom.onSendMessagePrivateCallback(b) : "closed" === d ? (this.chatRoom.onClosed(b), this.tcSocket.close()) : "sysmsg" === d ? this.chatRoom.onSystemMessage(b) : "gift" === d ? this.chatRoom.onGiftMessage(b) : d.startsWith("yut_") ? this.chatRoom.onYoutube(b) : "yut_playlist" === d ? this.chatRoom.onYoutubePlaylist(b) : d.startsWith("guest_session_timeout") ? this.chatRoom.onGuestSessTimeout(b) : d.startsWith("multiple_videos_timeout") ? this.chatRoom.onMultipleVideosTimeout(b) : console.error("Unknown pkt: " + JSON.stringify(b)) : console.error("Unknown pkt format: " + JSON.stringify(b))
+		}
+		wsCreatePacket(a, b) {
+			const c = {
+				tc: a,
+				req: ++this.reqid
+			};
+			return this.registerPacketCallback(c, b), c
+		}
+		registerPacketCallback(a, b) {
+			b !== void 0 && (this.queue[a.req] = b)
+		}
+	}
+	window.TinychatApp.BLL.PacketWorker = b
+})(); < /script > < script > (function () {
+"use strict";
+let a = null;
+class b {
+	constructor() {}
+	static getInstance() {
+		return null == a && (a = new b), a
+	}
+	getRoomEvent() {}
+}
+window.TinychatApp.BLL.Tracker = b
+})();
